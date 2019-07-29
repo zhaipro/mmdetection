@@ -2,10 +2,8 @@ import numpy as np
 from pycocotools.coco import COCO
 
 from .custom import CustomDataset
-from .registry import DATASETS
 
 
-@DATASETS.register_module
 class CocoDataset(CustomDataset):
 
     CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
@@ -23,9 +21,11 @@ class CocoDataset(CustomDataset):
                'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
                'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush')
 
-    def load_annotations(self, ann_file):
+    def load_annotations(self, ann_file, cat_need):
         self.coco = COCO(ann_file)
         self.cat_ids = self.coco.getCatIds()
+        if cat_need is not None:
+            self.catIds = self.coco.getCatIds(catNms=cat_need)
         self.cat2label = {
             cat_id: i + 1
             for i, cat_id in enumerate(self.cat_ids)
@@ -40,7 +40,7 @@ class CocoDataset(CustomDataset):
 
     def get_ann_info(self, idx):
         img_id = self.img_infos[idx]['id']
-        ann_ids = self.coco.getAnnIds(imgIds=[img_id])
+        ann_ids = self.coco.getAnnIds(imgIds=[img_id], catIds=self.catIds)
         ann_info = self.coco.loadAnns(ann_ids)
         return self._parse_ann_info(ann_info, self.with_mask)
 

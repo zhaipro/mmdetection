@@ -6,7 +6,7 @@ import numpy as np
 import torch.nn as nn
 import pycocotools.mask as maskUtils
 
-from mmdet.core import tensor2imgs, get_classes, auto_fp16
+from mmdet.core import tensor2imgs, get_classes
 
 
 class BaseDetector(nn.Module):
@@ -16,7 +16,6 @@ class BaseDetector(nn.Module):
 
     def __init__(self):
         super(BaseDetector, self).__init__()
-        self.fp16_enabled = False
 
     @property
     def with_neck(self):
@@ -80,7 +79,6 @@ class BaseDetector(nn.Module):
         else:
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    @auto_fp16(apply_to=('img', ))
     def forward(self, img, img_meta, return_loss=True, **kwargs):
         if return_loss:
             return self.forward_train(img, img_meta, **kwargs)
@@ -91,7 +89,7 @@ class BaseDetector(nn.Module):
                     data,
                     result,
                     img_norm_cfg,
-                    dataset=None,
+                    dataset='coco',
                     score_thr=0.3):
         if isinstance(result, tuple):
             bbox_result, segm_result = result
@@ -103,11 +101,9 @@ class BaseDetector(nn.Module):
         imgs = tensor2imgs(img_tensor, **img_norm_cfg)
         assert len(imgs) == len(img_metas)
 
-        if dataset is None:
-            class_names = self.CLASSES
-        elif isinstance(dataset, str):
+        if isinstance(dataset, str):
             class_names = get_classes(dataset)
-        elif isinstance(dataset, (list, tuple)):
+        elif isinstance(dataset, (list, tuple)) or dataset is None:
             class_names = dataset
         else:
             raise TypeError(

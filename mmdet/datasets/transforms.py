@@ -99,24 +99,10 @@ class MaskTransform(object):
     """
 
     def __call__(self, masks, pad_shape, scale_factor, flip=False):
-        # aspect ratio unchanged
-        if isinstance(scale_factor, float):
-            masks = [
-                mmcv.imrescale(mask, scale_factor, interpolation='nearest')
-                for mask in masks
-            ]
-        # aspect ratio changed
-        else:
-            w_ratio, h_ratio = scale_factor[:2]
-            if masks:
-                h, w = masks[0].shape[:2]
-                new_h = int(np.round(h * h_ratio))
-                new_w = int(np.round(w * w_ratio))
-                new_size = (new_w, new_h)
-                masks = [
-                    mmcv.imresize(mask, new_size, interpolation='nearest')
-                    for mask in masks
-                ]
+        masks = [
+            mmcv.imrescale(mask, scale_factor, interpolation='nearest')
+            for mask in masks
+        ]
         if flip:
             masks = [mask[:, ::-1] for mask in masks]
         padded_masks = [
